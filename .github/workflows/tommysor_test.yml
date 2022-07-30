@@ -5,14 +5,15 @@ on:
     branches: [ "tommysor/integrationTests" ]
 
 jobs:
-  IntegrationTests:
+  Tests:
     strategy:
       matrix:
         include:
-        - os: ubuntu-latest
-          ftpServer: pure-ftpd
-        - os: ubuntu-latest
-          ftpServer: vsftpd
+        - ftp: pure-ftpd
+          os: ubuntu-latest
+        - ftp: vsftpd
+          os: ubuntu-latest
+          
     runs-on: ${{ matrix.os }}
     
     steps:
@@ -27,5 +28,5 @@ jobs:
       run: dotnet build --no-restore
     - name: Test
       env:
-        FluentFTP__Tests__Integration__FtpServerKey: ${{ matrix.ftpServer }}
+        FluentFTP__Tests__Integration__FtpServerKey: ${{ matrix.ftp }}
       run: dotnet test --no-build --verbosity normal

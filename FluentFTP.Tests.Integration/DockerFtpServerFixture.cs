@@ -19,7 +19,7 @@ namespace FluentFTP.Tests.Integration
 			var testContainerKey = Environment.GetEnvironmentVariable("FluentFTP__Tests__Integration__FtpServerKey");
 			var testcontainersBuilder = GetContainer(testContainerKey);
 
-			if(testcontainersBuilder is not null)
+			if (testcontainersBuilder is not null)
 			{
 				container = testcontainersBuilder.Build();
 				container.StartAsync().Wait();

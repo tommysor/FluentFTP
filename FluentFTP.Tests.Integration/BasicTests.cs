@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace FluentFTP.Tests.Integration
 {
     public class BasicTests : IClassFixture<DockerFtpServerFixture>
@@ -14,33 +16,154 @@ namespace FluentFTP.Tests.Integration
 			_password = _fixture.password;
 		}
 
+		private FtpClient GetConnectedClient()
+		{
+			var client = new FtpClient(_host, _user, _password);
+			client.Connect();
+			return client;
+		}
+
+		#region Connect
 		[Fact]
-        public async Task ConnectAndList()
+        public async Task ConnectAsync()
         {
 			using var ftpClient = new FtpClient(_host, _user, _password);
 			await ftpClient.ConnectAsync();
-			var list = ftpClient.GetListing();
-			Assert.Empty(list);
+			// Connect without error => pass
+			Assert.True(true);
         }
 
 		[Fact]
-		public async Task Upload()
+		public void Connect()
 		{
+			using var ftpClient = new FtpClient(_host, _user, _password);
+			ftpClient.Connect();
+			// Connect without error => pass
+			Assert.True(true);
+		}
+
+		[Fact]
+		public void AutoConnect()
+		{
+			using var ftpClient = new FtpClient(_host, _user, _password);
+			var profile = ftpClient.AutoConnect();
+			Assert.NotNull(profile);
+		}
+
+		[Fact]
+		public async Task AutoConnectAsync()
+		{
+			using var ftpClient = new FtpClient(_host, _user, _password);
+			var profile = await ftpClient.AutoConnectAsync();
+			Assert.NotNull(profile);
+		}
+
+		[Fact]
+		public void AutoDetect()
+		{
+			using var ftpClient = new FtpClient(_host, _user, _password);
+			var profiles = ftpClient.AutoDetect();
+			Assert.NotEmpty(profiles);
+		}
+
+		[Fact]
+		public async Task AutoDetectAsync()
+		{
+			using var ftpClient = new FtpClient(_host, _user, _password);
+			var profiles = await ftpClient.AutoDetectAsync(false);
+			Assert.NotEmpty(profiles);
+		}
+		#endregion
+
+		#region UploadDownload
+		[Fact]
+		public async Task UploadDownloadBytesAsync()
+		{
+			const string content = "Hello World!";
+			var bytes = Encoding.UTF8.GetBytes(content);
+
+			using var ftpClient = GetConnectedClient();
+
+			const string path = "/UploadDownloadBytesAsync/helloworld.txt";
+			var uploadStatus = await ftpClient.UploadAsync(bytes, path, createRemoteDir: true);
+			Assert.Equal(FtpStatus.Success, uploadStatus);
+
+			var outBytes = await ftpClient.DownloadAsync(path, CancellationToken.None);
+			Assert.NotNull(outBytes);
+
+			var outContent = Encoding.UTF8.GetString(outBytes);
+			Assert.Equal(content, outContent);
+		}
+
+		[Fact]
+		public void UploadDownloadBytes()
+		{
+			const string content = "Hello World!";
+			var bytes = Encoding.UTF8.GetBytes(content);
+
+			using var ftpClient = GetConnectedClient();
+
+			const string path = "/UploadDownloadBytes/helloworld.txt";
+			var uploadStatus = ftpClient.Upload(bytes, path, createRemoteDir: true);
+			Assert.Equal(FtpStatus.Success, uploadStatus);
+
+			var success = ftpClient.Download(out var outBytes, path);
+			Assert.True(success);
+			
+			var outContent = Encoding.UTF8.GetString(outBytes);
+			Assert.Equal(content, outContent);
+		}
+
+		[Fact]
+		public async Task UploadDownloadStreamAsync()
+		{
+			const string content = "Hello World!";
 			using var stream = new MemoryStream();
-			using var writer = new StreamWriter(stream);
-			writer.WriteLine("Hello World!");
-			stream.Flush();
+			using var streamWriter = new StreamWriter(stream, Encoding.UTF8);
+			await streamWriter.WriteAsync(content);
+			await streamWriter.FlushAsync();
 			stream.Position = 0;
 
-			using var ftpClient = new FtpClient(_host, _user, _password);
-			await ftpClient.ConnectAsync();
+			const string path = "/UploadDownloadStreamAsync/helloworld.txt";
+			using var ftpClient = GetConnectedClient();
+			var uploadStatus = await ftpClient.UploadAsync(stream, path, createRemoteDir: true);
+			Assert.Equal(FtpStatus.Success, uploadStatus);
 
-			await ftpClient.UploadAsync(stream, "HelloWorld.txt");
+			using var outStream = new MemoryStream();
+			var success = await ftpClient.DownloadAsync(outStream, path);
+			Assert.True(success);
 
-			var list = ftpClient.GetListing();
-			Assert.Single(list);
-			var fileName = list.Where(x => x.Name == "HelloWorld.txt");
-			Assert.Single(fileName);
+			outStream.Position = 0;
+			using var streamReader = new StreamReader(outStream, Encoding.UTF8);
+			var outContent = await streamReader.ReadToEndAsync();
+			Assert.Equal(content, outContent);
 		}
+
+		[Fact]
+		public void UploadDownloadStream()
+		{
+			const string content = "Hello World!";
+			using var stream = new MemoryStream();
+			using var streamWriter = new StreamWriter(stream, Encoding.UTF8);
+			streamWriter.Write(content);
+			streamWriter.Flush();
+			stream.Position = 0;
+
+			const string path = "/UploadDownloadStreamAsync/helloworld.txt";
+			using var ftpClient = GetConnectedClient();
+			var uploadStatus = ftpClient.Upload(stream, path, createRemoteDir: true);
+			Assert.Equal(FtpStatus.Success, uploadStatus); 
+
+			using var outStream = new MemoryStream();
+			var success = ftpClient.Download(outStream, path);
+			Assert.True(success);
+
+			outStream.Position = 0;
+			using var streamReader = new StreamReader(outStream, Encoding.UTF8);
+			var outContent = streamReader.ReadToEnd();
+			Assert.Equal(content, outContent);
+		}
+
+		#endregion
 	}
 }
