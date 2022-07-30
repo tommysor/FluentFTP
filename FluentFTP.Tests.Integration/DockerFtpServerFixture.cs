@@ -11,18 +11,36 @@ namespace FluentFTP.Tests.Integration
 	public class DockerFtpServerFixture : IDisposable
 	{
 		internal TestcontainersContainer container;
+		internal string user { get; } = "bob";
+		internal string password { get; } = "12345";
 
 		public DockerFtpServerFixture()
 		{
-			var testcontainersBuilder = GetVsftpdContainerBuilder();
+			var testContainerKey = Environment.GetEnvironmentVariable("FluentFTP__Tests__Integration__FtpServerKey");
+			var testcontainersBuilder = GetContainer(testContainerKey);
 
-			container = testcontainersBuilder.Build();
-			container.StartAsync().Wait();
+			if(testcontainersBuilder is not null)
+			{
+				container = testcontainersBuilder.Build();
+				container.StartAsync().Wait();
+			}
 		}
 
 		public void Dispose()
 		{
 			container?.DisposeAsync();
+		}
+
+		private ITestcontainersBuilder<TestcontainersContainer>? GetContainer(string? key)
+		{
+			var container = key switch
+			{
+				"pure-ftpd" => GetPureFtpdContainerBuilder(),
+				"vsftpd" => GetVsftpdContainerBuilder(),
+				_ => null
+			};
+
+			return container;
 		}
 
 		private ITestcontainersBuilder<TestcontainersContainer> GetPureFtpdContainerBuilder()
@@ -37,8 +55,8 @@ namespace FluentFTP.Tests.Integration
 				builder = builder.WithPortBinding(port);
 			}
 
-			builder = builder.WithEnvironment("FTP_USER_NAME", "bob")
-				.WithEnvironment("FTP_USER_PASS", "12345")
+			builder = builder.WithEnvironment("FTP_USER_NAME", user)
+				.WithEnvironment("FTP_USER_PASS", password)
 				.WithEnvironment("FTP_USER_HOME", "/home/bob")
 				.WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(21));
 
@@ -61,8 +79,8 @@ namespace FluentFTP.Tests.Integration
 
 			builder = builder
 				.WithEnvironment("PASV_ADDRESS", "127.0.0.1")
-				.WithEnvironment("FTP_USER", "bob")
-				.WithEnvironment("FTP_PASS", "12345")
+				.WithEnvironment("FTP_USER", user)
+				.WithEnvironment("FTP_PASS", password)
 				.WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(21));
 			
 			return builder;
