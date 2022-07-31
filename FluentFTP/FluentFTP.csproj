@@ -37,6 +37,10 @@
     <DefineConstants>$(DefineConstants);NET50;CORE</DefineConstants>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(TargetFramework)'=='net60'">
+    <DefineConstants>$(DefineConstants);NET60;CORE;ASYNC</DefineConstants>
+  </PropertyGroup>
+
   <!--
   Required only for GetListingAsyncEnumerable
   
