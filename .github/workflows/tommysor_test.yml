@@ -13,8 +13,6 @@ jobs:
           os: ubuntu-latest
         - ftp: vsftpd
           os: ubuntu-latest
-        - ftp: non-existant
-          os: ubuntu-latest
           
     runs-on: ${{ matrix.os }}
     

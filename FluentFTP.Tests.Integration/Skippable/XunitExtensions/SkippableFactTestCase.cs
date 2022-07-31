@@ -28,6 +28,9 @@ namespace FluentFTP.Tests.Integration.Skippable.XunitExtensions
 			RunSummary result;
 			if (SkippableState.ShouldSkip)
 			{
+				/*
+				 * This does skip execution, but does not register as "skipped" in the summary.
+				 */
 				result = new RunSummary
 				{
 					Total = 1,

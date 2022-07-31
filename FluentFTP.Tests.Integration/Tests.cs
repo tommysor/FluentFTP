@@ -3,14 +3,20 @@ using System.Text;
 
 namespace FluentFTP.Tests.Integration
 {
-    public class BasicTests : IClassFixture<DockerFtpServerFixture>
+	/// <summary>
+	/// All tests must use [SkippableFact] or [SkippableTheory] (as opposed to [Fact] and [Theory]) to allow
+	/// "all tests" to run successfully on a developer machine without Docker (skipping all integration tests).
+	/// 
+	/// Making tests skippable is mostly copied from https://github.com/xunit/samples.xunit/tree/main/DynamicSkipExample
+	/// </summary>
+	public class Tests : IClassFixture<DockerFtpServerFixture>
     {
 		private readonly DockerFtpServerFixture _fixture;
 		private readonly string _host = "localhost";
 		private readonly string _user;
 		private readonly string _password;
 
-		public BasicTests(DockerFtpServerFixture fixture)
+		public Tests(DockerFtpServerFixture fixture)
 		{
 			_fixture = fixture;
 			_user = _fixture.user;
@@ -33,7 +39,7 @@ namespace FluentFTP.Tests.Integration
 			// Connect without error => pass
 			Assert.True(true);
         }
-
+		
 		[SkippableFact]
 		public void Connect()
 		{
@@ -165,6 +171,52 @@ namespace FluentFTP.Tests.Integration
 			Assert.Equal(content, outContent);
 		}
 
+		#endregion
+
+		#region GetListing
+		[SkippableFact]
+		public async Task GetListingAsync()
+		{
+			using var client = GetConnectedClient();
+			var bytes = Encoding.UTF8.GetBytes("a");
+			const string directory = "/GetListingAsync/";
+			const string fileNameInRoot = "GetListingAsync.txt";
+			const string fileNameInDirectory = "GetListingAsyncInDirectory.txt";
+			await client.UploadAsync(bytes, fileNameInRoot);
+			await client.UploadAsync(bytes, directory + fileNameInDirectory, createRemoteDir: true);
+
+			var listRoot = await client.GetListingAsync();
+			Assert.Contains(listRoot, f => f.Name == fileNameInRoot);
+
+			var listDirectory = await client.GetListingAsync(directory);
+			Assert.Contains(listDirectory, f => f.Name == fileNameInDirectory);
+			
+			await client.SetWorkingDirectoryAsync(directory);
+			var listCurrentDirectory = await client.GetListingAsync();
+			Assert.Contains(listCurrentDirectory, f => f.Name == fileNameInDirectory);
+		}
+
+		[SkippableFact]
+		public void GetListing()
+		{
+			using var client = GetConnectedClient();
+			var bytes = Encoding.UTF8.GetBytes("a");
+			const string directory = "/GetListing/";
+			const string fileNameInRoot = "GetListing.txt";
+			const string fileNameInDirectory = "GetListingInDirectory.txt";
+			client.Upload(bytes, fileNameInRoot);
+			client.Upload(bytes, directory + fileNameInDirectory, createRemoteDir: true);
+
+			var listRoot = client.GetListing();
+			Assert.Contains(listRoot, f => f.Name == fileNameInRoot);
+
+			var listDirectory = client.GetListing(directory);
+			Assert.Contains(listDirectory, f => f.Name == fileNameInDirectory);
+
+			client.SetWorkingDirectory(directory);
+			var listCurrentDirectory = client.GetListing();
+			Assert.Contains(listCurrentDirectory, f => f.Name == fileNameInDirectory);
+		}
 		#endregion
 	}
 }

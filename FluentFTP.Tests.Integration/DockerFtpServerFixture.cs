@@ -25,6 +25,7 @@ namespace FluentFTP.Tests.Integration
 				// Default on developer machine.
 				testContainerKey = "pure-ftpd";
 			}
+
 			ITestcontainersBuilder<TestcontainersContainer>? testcontainersBuilder = null;
 			try
 			{
@@ -47,7 +48,7 @@ namespace FluentFTP.Tests.Integration
 			else
 			{
 				if (isCi)
-					throw new InvalidOperationException($"Unable to setup FTP server for integration test. No testcontaner found for key: '{testContainerKey}'");
+					throw new InvalidOperationException($"Unable to setup FTP server for integration test. No testcontainer found for key: '{testContainerKey}'");
 
 				Skippable.SkippableState.ShouldSkip = true;
 			}
