@@ -1,3 +1,4 @@
+using FluentFTP.Tests.Integration.Skippable;
 using System.Text;
 
 namespace FluentFTP.Tests.Integration
@@ -24,7 +25,7 @@ namespace FluentFTP.Tests.Integration
 		}
 
 		#region Connect
-		[Fact]
+		[SkippableFact]
         public async Task ConnectAsync()
         {
 			using var ftpClient = new FtpClient(_host, _user, _password);
@@ -33,7 +34,7 @@ namespace FluentFTP.Tests.Integration
 			Assert.True(true);
         }
 
-		[Fact]
+		[SkippableFact]
 		public void Connect()
 		{
 			using var ftpClient = new FtpClient(_host, _user, _password);
@@ -42,7 +43,7 @@ namespace FluentFTP.Tests.Integration
 			Assert.True(true);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void AutoConnect()
 		{
 			using var ftpClient = new FtpClient(_host, _user, _password);
@@ -50,7 +51,7 @@ namespace FluentFTP.Tests.Integration
 			Assert.NotNull(profile);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public async Task AutoConnectAsync()
 		{
 			using var ftpClient = new FtpClient(_host, _user, _password);
@@ -58,7 +59,7 @@ namespace FluentFTP.Tests.Integration
 			Assert.NotNull(profile);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void AutoDetect()
 		{
 			using var ftpClient = new FtpClient(_host, _user, _password);
@@ -66,7 +67,7 @@ namespace FluentFTP.Tests.Integration
 			Assert.NotEmpty(profiles);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public async Task AutoDetectAsync()
 		{
 			using var ftpClient = new FtpClient(_host, _user, _password);
@@ -76,7 +77,7 @@ namespace FluentFTP.Tests.Integration
 		#endregion
 
 		#region UploadDownload
-		[Fact]
+		[SkippableFact]
 		public async Task UploadDownloadBytesAsync()
 		{
 			const string content = "Hello World!";
@@ -95,7 +96,7 @@ namespace FluentFTP.Tests.Integration
 			Assert.Equal(content, outContent);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void UploadDownloadBytes()
 		{
 			const string content = "Hello World!";
@@ -114,7 +115,7 @@ namespace FluentFTP.Tests.Integration
 			Assert.Equal(content, outContent);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public async Task UploadDownloadStreamAsync()
 		{
 			const string content = "Hello World!";
@@ -139,7 +140,7 @@ namespace FluentFTP.Tests.Integration
 			Assert.Equal(content, outContent);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void UploadDownloadStream()
 		{
 			const string content = "Hello World!";

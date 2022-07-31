@@ -16,13 +16,40 @@ namespace FluentFTP.Tests.Integration
 
 		public DockerFtpServerFixture()
 		{
+			// CI is "Always set to true" in GitHub Actions, used to detect if currently running in CI (Continuous Integration) pipeline.
+			var ci = Environment.GetEnvironmentVariable("CI");
+			var isCi = string.Equals(ci, "true", StringComparison.OrdinalIgnoreCase);
 			var testContainerKey = Environment.GetEnvironmentVariable("FluentFTP__Tests__Integration__FtpServerKey");
-			var testcontainersBuilder = GetContainer(testContainerKey);
+			if (!isCi)
+			{
+				// Default on developer machine.
+				testContainerKey = "pure-ftpd";
+			}
+			ITestcontainersBuilder<TestcontainersContainer>? testcontainersBuilder = null;
+			try
+			{
+				testcontainersBuilder = GetContainer(testContainerKey);
+			}
+			catch (TypeInitializationException ex)
+			{
+				// Probably because docker is not running on the machine.
+				if (isCi)
+					throw new InvalidOperationException("Unable to setup FTP server for integration test. TypeInitializationException.", ex);
+				
+				Skippable.SkippableState.ShouldSkip = true;
+			}
 
 			if (testcontainersBuilder is not null)
 			{
 				container = testcontainersBuilder.Build();
 				container.StartAsync().Wait();
+			}
+			else
+			{
+				if (isCi)
+					throw new InvalidOperationException($"Unable to setup FTP server for integration test. No testcontaner found for key: '{testContainerKey}'");
+
+				Skippable.SkippableState.ShouldSkip = true;
 			}
 		}
 
